@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plant Basket">
+<meta name="theme-color" content="#F6F7F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121512" media="(prefers-color-scheme: dark)">
+<title>Plant Basket — Grocery Nutrition</title>
+<style>
+:root{
+  --bg:#F6F7F2; --card:#FFFFFF; --border:#E1E4DC; --border-soft:#DDE1D9;
+  --text:#20241F; --muted:#777D75; --muted2:#6F756C; --track:#E9EBE5; --track-big:#E8EAE4;
+  --chip-bg:#EDEFE8; --thumb:#F1F2EC; --insight-bg:#F0F4EC; --insight-border:#DCE6D7;
+  --shadow:0 2px 9px rgba(35,45,35,0.045);
+  --iron:#D1007A; --iodine:#57A8D6; --b12:#4CAF50; --calcium:#C89A1E; --omega3:#C47A32;
+  --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121512; --card:#1B201B; --border:#343B34; --border-soft:#3A4239;
+    --text:#F1F4EF; --muted:#AEB7AB; --muted2:#9AA398; --track:#2A302A; --track-big:#2A302A;
+    --chip-bg:#202520; --thumb:#242924; --insight-bg:#1C221C; --insight-border:#394639;
+    --shadow:0 2px 9px rgba(0,0,0,0.25);
+    --iodine:#8FD3FF; --calcium:#F4D35E;
+  }
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0; background:var(--bg); overscroll-behavior-y:none;}
+body{
+  font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+button, input, select{ font-family:inherit; }
+button{ touch-action:manipulation; cursor:pointer; }
+input, select{ font-size:16px; } /* prevents iOS auto-zoom on focus */
+
+#app{ max-width:640px; margin:0 auto; padding:calc(10px + var(--safe-t)) 14px calc(96px + var(--safe-b)); }
+
+/* ---------- Header ---------- */
+.eyebrow{ font-size:.7rem; font-weight:800; letter-spacing:1px; color:var(--muted2); text-transform:uppercase; margin-bottom:2px; }
+.header-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+h1.title{ font-size:1.6rem; letter-spacing:-1px; margin:0 0 4px; font-weight:800; }
+.subtitle{ color:var(--muted); font-size:.86rem; margin-bottom:10px; line-height:1.35; }
+.basket-metric{ text-align:right; flex-shrink:0; padding-top:4px; }
+.basket-metric .n{ font-size:1.25rem; font-weight:800; line-height:1; }
+.basket-metric .l{ font-size:.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
+
+/* ---------- Segmented control ---------- */
+.segmented{ display:flex; background:var(--chip-bg); border-radius:14px; padding:3px; gap:2px; margin:10px 0 14px; }
+.segmented button{
+  flex:1; border:none; background:transparent; border-radius:11px; padding:9px 6px;
+  font-size:.86rem; font-weight:700; color:var(--muted2); transition:background .15s, color .15s;
+}
+.segmented button.active{ background:var(--card); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.segmented button:active{ transform:scale(.97); }
+
+/* ---------- Inputs ---------- */
+.search-wrap{ position:relative; margin-bottom:9px; }
+.search-wrap input{
+  width:100%; border:1px solid var(--border-soft); background:var(--card); border-radius:16px;
+  padding:12px 14px; min-height:46px; color:var(--text);
+}
+.search-wrap input::placeholder{ color:var(--muted); }
+
+.filter-row{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:9px; }
+.filter-row select{
+  width:100%; border:1px solid var(--border-soft); background:var(--card); color:var(--text);
+  border-radius:13px; padding:10px 8px; min-height:42px; font-size:.78rem; -webkit-appearance:none; appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23777D75' d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat:no-repeat; background-position:right 6px center; background-size:16px;
+}
+
+.vegan-toggle-row{ display:flex; align-items:center; justify-content:space-between; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:10px 13px; margin-bottom:4px; }
+.vegan-toggle-row .label{ font-size:.83rem; font-weight:600; }
+.switch{ position:relative; width:46px; height:27px; flex-shrink:0; }
+.switch input{ opacity:0; width:0; height:0; }
+.switch .track{ position:absolute; inset:0; background:#D4D8CF; border-radius:99px; transition:background .18s; }
+.switch input:checked + .track{ background:#4CAF50; }
+.switch .knob{ position:absolute; top:2px; left:2px; width:23px; height:23px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:transform .18s; }
+.switch input:checked + .track .knob{ transform:translateX(19px); }
+@media (prefers-color-scheme:dark){ .switch .track{ background:#3A4239; } }
+
+/* ---------- Info banner ---------- */
+.info-banner{ background:var(--insight-bg); border:1px solid var(--insight-border); border-radius:14px; padding:11px 13px; font-size:.8rem; line-height:1.4; margin:10px 0; }
+.info-banner button{ display:block; width:100%; margin-top:9px; border:1px solid var(--border-soft); background:var(--card); border-radius:12px; padding:10px; font-weight:700; font-size:.82rem; color:var(--text); }
+.info-banner button:active{ transform:scale(.98); }
+
+/* ---------- Catalogue heading ---------- */
+.cat-heading{ display:flex; justify-content:space-between; align-items:end; margin:14px 2px 8px; }
+.cat-heading .h{ font-size:1.05rem; font-weight:800; }
+.cat-heading .c{ font-size:.7rem; color:var(--muted); }
+
+/* ---------- Product grid ---------- */
+.grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+@media (max-width:360px){ .grid{ grid-template-columns:1fr; } }
+
+.card{ background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); padding:.7rem; overflow:hidden; }
+.product-top{ display:flex; gap:10px; align-items:flex-start; min-height:78px; }
+.thumb{ width:60px; height:60px; border-radius:13px; background:var(--thumb); border:1px solid var(--border-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:24px; overflow:hidden; }
+.p-copy{ min-width:0; padding-top:1px; }
+.brand{ font-size:.63rem; font-weight:800; color:var(--muted2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.p-name{ font-size:.87rem; font-weight:750; line-height:1.18; margin-bottom:4px; }
+.p-meta{ font-size:.63rem; line-height:1.35; color:var(--muted); }
+
+.nutrient-row{ margin-top:8px; }
+.nutrient-line{ display:flex; justify-content:space-between; align-items:center; font-size:.63rem; margin-bottom:3px; color:#535951; }
+@media (prefers-color-scheme:dark){ .nutrient-line{ color:var(--muted); } }
+.nutrient-value{ color:var(--muted); font-weight:600; }
+.nutrient-track{ width:100%; height:5px; background:var(--track); border-radius:99px; overflow:hidden; }
+.nutrient-fill{ height:5px; border-radius:99px; }
+
+.add-btn{ width:100%; margin-top:9px; border:1px solid var(--border-soft); background:var(--card); border-radius:12px; min-height:38px; font-weight:700; font-size:.78rem; color:var(--text); }
+.add-btn:active{ transform:scale(.97); background:var(--chip-bg); }
+
+/* ---------- Empty state ---------- */
+.empty-card{ background:var(--card); border:1px dashed var(--border-soft); border-radius:18px; padding:30px 18px; text-align:center; color:var(--muted); }
+.empty-card .big{ font-size:2rem; }
+.empty-card .strong{ font-weight:750; color:var(--text); margin-top:7px; }
+.empty-card .small{ font-size:.78rem; margin-top:4px; }
+
+/* ---------- Pagination ---------- */
+.divider{ border:none; border-top:1px solid var(--border); margin:16px 0 12px; }
+.pagination{ display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:8px; align-items:center; }
+.pagination button{ border:1px solid var(--border-soft); background:var(--card); border-radius:12px; min-height:42px; font-weight:700; font-size:1rem; color:var(--text); }
+.pagination button:disabled{ opacity:.35; }
+.pagination button:not(:disabled):active{ transform:scale(.95); }
+.page-indicator{ text-align:center; font-size:.76rem; font-weight:700; color:var(--muted2); }
+
+/* ---------- Basket ---------- */
+.section-title{ font-size:1.1rem; font-weight:800; margin:2px 0 12px; }
+.basket-item{ background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); padding:12px 13px; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+.basket-item-info{ flex:1; min-width:0; }
+.basket-item-name{ font-weight:750; font-size:.88rem; line-height:1.2; }
+.basket-item-meta{ font-size:.68rem; color:var(--muted); margin-top:3px; }
+.stepper{ display:flex; align-items:center; border:1px solid var(--border-soft); border-radius:10px; overflow:hidden; flex-shrink:0; }
+.stepper button{ width:30px; height:32px; border:none; background:var(--chip-bg); font-size:1rem; font-weight:700; color:var(--text); }
+.stepper button:active{ background:var(--border-soft); }
+.stepper .n{ width:28px; text-align:center; font-weight:700; font-size:.85rem; }
+.remove-btn{ width:32px; height:32px; border:1px solid var(--border-soft); background:var(--card); border-radius:10px; color:var(--muted2); font-size:.95rem; flex-shrink:0; }
+.remove-btn:active{ background:var(--chip-bg); }
+
+.dashboard-card{ background:var(--card); border:1px solid var(--border); border-radius:18px; padding:15px; margin-top:14px; box-shadow:var(--shadow); }
+.dashboard-title{ font-size:.75rem; font-weight:800; color:var(--muted2); text-transform:uppercase; letter-spacing:.6px; margin-bottom:13px; }
+.big-nutrient{ margin-bottom:13px; }
+.big-nutrient:last-child{ margin-bottom:0; }
+.big-nutrient-head{ display:flex; justify-content:space-between; font-weight:750; font-size:.83rem; margin-bottom:5px; }
+.big-track{ width:100%; height:11px; background:var(--track-big); border-radius:99px; overflow:hidden; }
+.big-fill{ height:11px; border-radius:99px; }
+.big-detail{ font-size:.68rem; color:var(--muted); margin-top:4px; }
+
+.insight-card{ background:var(--insight-bg); border:1px solid var(--insight-border); border-radius:16px; padding:12px 13px; margin-top:11px; font-size:.78rem; line-height:1.4; }
+.action-btn{ width:100%; margin-top:10px; border:1px solid var(--border-soft); background:var(--card); border-radius:12px; padding:11px; font-weight:700; font-size:.83rem; color:var(--text); }
+.action-btn:active{ transform:scale(.98); background:var(--chip-bg); }
+.action-btn.destructive{ color:#C0392B; }
+
+/* ---------- Floating basket bar ---------- */
+.floating-wrap{
+  position:fixed; left:0; right:0; bottom:0; z-index:1000;
+  padding:0 10px calc(10px + var(--safe-b));
+  display:flex; flex-direction:column; align-items:center;
+  pointer-events:none;
+}
+.floating-progress{ width:100%; max-width:620px; display:grid; grid-template-columns:repeat(5,1fr); gap:4px; padding:0 14px 8px; }
+.floating-track{ height:4px; background:#4D534B; border-radius:99px; overflow:hidden; }
+.floating-fill{ height:4px; border-radius:99px; }
+.floating-btn{
+  width:100%; max-width:620px; min-height:58px; border:1px solid rgba(255,255,255,.12); border-radius:17px;
+  background:rgba(32,37,31,.97); color:#fff; box-shadow:0 8px 28px rgba(0,0,0,.22);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  display:flex; align-items:center; justify-content:space-between; padding:0 18px;
+  font-size:.92rem; font-weight:700; pointer-events:auto;
+}
+.floating-btn:active{ background:rgba(43,49,42,.99); transform:scale(.985); }
+
+.footer-note{ margin-top:22px; font-size:.68rem; color:var(--muted); line-height:1.45; text-align:center; padding:0 6px; }
+
+/* ---------- Profile button ---------- */
+.profile-btn{
+  width:40px; height:40px; border-radius:50%; border:1px solid var(--border-soft); background:var(--card);
+  display:flex; align-items:center; justify-content:center; font-size:1.05rem; flex-shrink:0; margin-top:2px;
+}
+.profile-btn:active{ transform:scale(.94); background:var(--chip-bg); }
+.header-actions{ display:flex; align-items:flex-start; gap:10px; }
+
+/* ---------- Onboarding / profile modal ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(15,18,14,.5); z-index:3000;
+  display:flex; align-items:flex-end; justify-content:center;
+  padding:10px; padding-bottom:calc(10px + var(--safe-b));
+  -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+}
+@media (min-width:520px){ .modal-overlay{ align-items:center; } }
+.modal-card{
+  width:100%; max-width:440px; max-height:88vh; overflow-y:auto;
+  background:var(--card); border-radius:22px; padding:20px 20px calc(18px + var(--safe-b));
+  box-shadow:0 20px 50px rgba(0,0,0,.25);
+}
+.modal-title{ font-size:1.15rem; font-weight:800; margin-bottom:4px; }
+.modal-sub{ font-size:.8rem; color:var(--muted); line-height:1.4; margin-bottom:16px; }
+.field-label{ font-size:.72rem; font-weight:700; color:var(--muted2); text-transform:uppercase; letter-spacing:.4px; margin:12px 0 6px; }
+.sex-picker{ display:flex; gap:8px; }
+.sex-picker input{ position:absolute; opacity:0; width:0; height:0; }
+.sex-picker label{
+  flex:1; border:1px solid var(--border-soft); background:var(--card); border-radius:13px; padding:11px 8px;
+  font-weight:700; font-size:.85rem; color:var(--text); text-align:center; display:block;
+}
+.sex-picker input:checked + label{ background:#20251F; border-color:#20251F; color:#fff; }
+@media (prefers-color-scheme:dark){ .sex-picker input:checked + label{ background:#EDEFE8; color:#20251F; } }
+.modal-card input[type="number"]{
+  width:100%; border:1px solid var(--border-soft); background:var(--bg); color:var(--text);
+  border-radius:13px; padding:11px 12px; min-height:44px;
+}
+.field-hint{ font-size:.66rem; color:var(--muted); margin-top:4px; }
+.modal-actions{ margin-top:18px; }
+.modal-submit{
+  width:100%; border:none; background:#20251F; color:#fff; border-radius:13px; padding:13px; min-height:48px;
+  font-weight:750; font-size:.9rem;
+}
+.modal-submit:active{ background:#2B312A; }
+@media (prefers-color-scheme:dark){ .modal-submit{ background:#EDEFE8; color:#20251F; } .modal-submit:active{ background:#DDE1D5; } }
+.modal-skip{
+  width:100%; border:none; background:transparent; color:var(--muted); font-size:.78rem; font-weight:600;
+  padding:11px; margin-top:2px;
+}
+.modal-error{ color:#C0392B; font-size:.76rem; margin-top:8px; display:none; }
+.modal-error.show{ display:block; }
+
+.profile-summary{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:11px 13px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.profile-summary .txt{ font-size:.76rem; color:var(--muted); line-height:1.4; }
+.profile-summary .txt strong{ color:var(--text); }
+.profile-summary button{ border:1px solid var(--border-soft); background:var(--card); border-radius:10px; padding:7px 11px; font-size:.72rem; font-weight:700; color:var(--text); flex-shrink:0; }
+.profile-summary button:active{ background:var(--chip-bg); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= DATA ================= */
+/* ---------------------------------------------------------------------
+ * EDITING THE CATALOGUE
+ * ---------------------------------------------------------------------
+ * Every product is one { ... } block below. To add a product, copy an
+ * existing block, paste it anywhere in the list, and change the values.
+ * To remove one, delete its block. Fields:
+ *   brand, product   — text shown on the card
+ *   img              — a photo URL (https://...). Leave "" to fall back
+ *                       to the placeholder icon. If the URL fails to
+ *                       load, the placeholder is shown automatically.
+ *   pkg, serving     — package size / serving size, shown as text
+ *   retailer         — e.g. "Woolworths", "Coles", "ALDI" (new retailer
+ *                       names are picked up automatically by the filter)
+ *   category         — e.g. "Bread", "Dairy" (same — filters update on
+ *                       their own, nothing else needs to change)
+ *   vegan            — true / false
+ *   iron, b12, iodine, calcium, omega3
+ *                    — nutrient content PER SERVING, in the units in the
+ *                       NUTRIENTS list just below (iron mg, b12 µg,
+ *                       iodine µg, calcium mg, omega3 mg)
+ * ------------------------------------------------------------------- */
+const PRODUCTS_RAW = [
+  {
+    brand: "Wonder", product: "Wholemeal Sandwich Bread",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "700g", serving: "2 slices (70g)",
+    retailer: "Woolworths", category: "Bread", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 10.0, calcium: 60.0, omega3: 40.0,
+  },
+  {
+    brand: "Wonder", product: "White Sandwich Bread",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "700g", serving: "2 slices (70g)",
+    retailer: "Woolworths", category: "Bread", vegan: true,
+    iron: 1.4, b12: 0.0, iodine: 8.0, calcium: 50.0, omega3: 30.0,
+  },
+  {
+    brand: "Macro", product: "Organic Rolled Oats",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "40g",
+    retailer: "Woolworths", category: "Breakfast", vegan: true,
+    iron: 1.7, b12: 0.0, iodine: 0.0, calcium: 20.0, omega3: 20.0,
+  },
+  {
+    brand: "Sanitarium", product: "Weet-Bix",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "575g", serving: "2 biscuits (30g)",
+    retailer: "Woolworths", category: "Breakfast", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 12.0, calcium: 45.0, omega3: 40.0,
+  },
+  {
+    brand: "Kellogg's", product: "Corn Flakes",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "380g", serving: "30g",
+    retailer: "Woolworths", category: "Breakfast", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 5.0, calcium: 5.0, omega3: 5.0,
+  },
+  {
+    brand: "Macro", product: "Brown Rice",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "150g cooked",
+    retailer: "Woolworths", category: "Grains", vegan: true,
+    iron: 0.7, b12: 0.0, iodine: 0.0, calcium: 15.0, omega3: 20.0,
+  },
+  {
+    brand: "SunRice", product: "Long Grain White Rice",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "150g cooked",
+    retailer: "Woolworths", category: "Grains", vegan: true,
+    iron: 0.4, b12: 0.0, iodine: 0.0, calcium: 15.0, omega3: 10.0,
+  },
+  {
+    brand: "San Remo", product: "Spaghetti",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "150g cooked",
+    retailer: "Woolworths", category: "Grains", vegan: true,
+    iron: 1.5, b12: 0.0, iodine: 2.0, calcium: 20.0, omega3: 20.0,
+  },
+  {
+    brand: "Macro", product: "Organic Chickpeas",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "400g", serving: "120g drained",
+    retailer: "Woolworths", category: "Legumes", vegan: true,
+    iron: 2.8, b12: 0.0, iodine: 3.0, calcium: 55.0, omega3: 60.0,
+  },
+  {
+    brand: "Macro", product: "Organic Lentils",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "400g", serving: "120g drained",
+    retailer: "Woolworths", category: "Legumes", vegan: true,
+    iron: 3.6, b12: 0.0, iodine: 3.0, calcium: 25.0, omega3: 70.0,
+  },
+  {
+    brand: "Edgell", product: "Red Kidney Beans",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "420g", serving: "120g drained",
+    retailer: "Woolworths", category: "Legumes", vegan: true,
+    iron: 2.5, b12: 0.0, iodine: 2.0, calcium: 40.0, omega3: 50.0,
+  },
+  {
+    brand: "Macro", product: "Organic Firm Tofu",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "100g",
+    retailer: "Woolworths", category: "Protein", vegan: true,
+    iron: 2.5, b12: 0.0, iodine: 5.0, calcium: 350.0, omega3: 500.0,
+  },
+  {
+    brand: "Woolworths", product: "Edamame Beans",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "100g",
+    retailer: "Woolworths", category: "Protein", vegan: true,
+    iron: 2.3, b12: 0.0, iodine: 2.0, calcium: 60.0, omega3: 300.0,
+  },
+  {
+    brand: "Plantitude", product: "Plant-Based Mince",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "100g",
+    retailer: "Woolworths", category: "Protein", vegan: true,
+    iron: 2.5, b12: 1.0, iodine: 5.0, calcium: 80.0, omega3: 100.0,
+  },
+  {
+    brand: "Macro", product: "Peanut Butter",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "375g", serving: "20g",
+    retailer: "Woolworths", category: "Spreads", vegan: true,
+    iron: 0.4, b12: 0.0, iodine: 0.0, calcium: 10.0, omega3: 10.0,
+  },
+  {
+    brand: "Macro", product: "Chia Seeds",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "20g",
+    retailer: "Woolworths", category: "Nuts & Seeds", vegan: true,
+    iron: 1.5, b12: 0.0, iodine: 1.0, calcium: 126.0, omega3: 3500.0,
+  },
+  {
+    brand: "Macro", product: "Ground Linseed",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "250g", serving: "20g",
+    retailer: "Woolworths", category: "Nuts & Seeds", vegan: true,
+    iron: 1.1, b12: 0.0, iodine: 1.0, calcium: 52.0, omega3: 4500.0,
+  },
+  {
+    brand: "Woolworths", product: "Walnuts",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "200g", serving: "30g",
+    retailer: "Woolworths", category: "Nuts & Seeds", vegan: true,
+    iron: 0.9, b12: 0.0, iodine: 1.0, calcium: 30.0, omega3: 2700.0,
+  },
+  {
+    brand: "Woolworths", product: "Almonds",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "400g", serving: "30g",
+    retailer: "Woolworths", category: "Nuts & Seeds", vegan: true,
+    iron: 1.1, b12: 0.0, iodine: 1.0, calcium: 75.0, omega3: 10.0,
+  },
+  {
+    brand: "Macro", product: "Pepitas",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "30g",
+    retailer: "Woolworths", category: "Nuts & Seeds", vegan: true,
+    iron: 2.6, b12: 0.0, iodine: 1.0, calcium: 14.0, omega3: 30.0,
+  },
+  {
+    brand: "Macro", product: "Tahini",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "375g", serving: "20g",
+    retailer: "Woolworths", category: "Spreads", vegan: true,
+    iron: 1.0, b12: 0.0, iodine: 1.0, calcium: 130.0, omega3: 50.0,
+  },
+  {
+    brand: "Vitasoy", product: "Calci-Plus Soy Milk",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1L", serving: "250mL",
+    retailer: "Woolworths", category: "Plant Milk", vegan: true,
+    iron: 1.0, b12: 1.0, iodine: 20.0, calcium: 300.0, omega3: 100.0,
+  },
+  {
+    brand: "So Good", product: "Almond Milk",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1L", serving: "250mL",
+    retailer: "Woolworths", category: "Plant Milk", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 15.0, calcium: 300.0, omega3: 50.0,
+  },
+  {
+    brand: "Vitasoy", product: "Oat Milk",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1L", serving: "250mL",
+    retailer: "Woolworths", category: "Plant Milk", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 15.0, calcium: 300.0, omega3: 100.0,
+  },
+  {
+    brand: "Woolworths", product: "Iodised Table Salt",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "1g",
+    retailer: "Woolworths", category: "Pantry", vegan: true,
+    iron: 0.0, b12: 0.0, iodine: 45.0, calcium: 0.0, omega3: 0.0,
+  },
+  {
+    brand: "Woolworths", product: "Baby Spinach",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "120g", serving: "100g",
+    retailer: "Woolworths", category: "Vegetables", vegan: true,
+    iron: 2.7, b12: 0.0, iodine: 15.0, calcium: 99.0, omega3: 140.0,
+  },
+  {
+    brand: "Woolworths", product: "Broccoli",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "100g",
+    retailer: "Woolworths", category: "Vegetables", vegan: true,
+    iron: 0.7, b12: 0.0, iodine: 10.0, calcium: 47.0, omega3: 50.0,
+  },
+  {
+    brand: "Woolworths", product: "Bananas",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1.5kg", serving: "1 medium (120g)",
+    retailer: "Woolworths", category: "Fruit", vegan: true,
+    iron: 0.3, b12: 0.0, iodine: 2.0, calcium: 6.0, omega3: 30.0,
+  },
+  {
+    brand: "Woolworths", product: "Royal Gala Apples",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "1 medium (150g)",
+    retailer: "Woolworths", category: "Fruit", vegan: true,
+    iron: 0.2, b12: 0.0, iodine: 0.0, calcium: 10.0, omega3: 10.0,
+  },
+  {
+    brand: "Woolworths", product: "White Potatoes",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "2kg", serving: "200g",
+    retailer: "Woolworths", category: "Vegetables", vegan: true,
+    iron: 1.8, b12: 0.0, iodine: 8.0, calcium: 30.0, omega3: 20.0,
+  },
+  {
+    brand: "Lindt", product: "70% Dark Chocolate",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "100g", serving: "30g",
+    retailer: "Woolworths", category: "Discretionary", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 2.0, calcium: 20.0, omega3: 20.0,
+  },
+  {
+    brand: "Smith's", product: "Original Potato Chips",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "170g", serving: "30g",
+    retailer: "Woolworths", category: "Discretionary", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 1.0, calcium: 10.0, omega3: 30.0,
+  },
+  {
+    brand: "Tip Top", product: "The One Wholemeal Bread",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "700g", serving: "2 slices (70g)",
+    retailer: "Coles", category: "Bread", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 10.0, calcium: 60.0, omega3: 40.0,
+  },
+  {
+    brand: "Tip Top", product: "The One White Bread",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "700g", serving: "2 slices (70g)",
+    retailer: "Coles", category: "Bread", vegan: true,
+    iron: 1.4, b12: 0.0, iodine: 8.0, calcium: 50.0, omega3: 30.0,
+  },
+  {
+    brand: "Coles", product: "Rolled Oats",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "40g",
+    retailer: "Coles", category: "Breakfast", vegan: true,
+    iron: 1.7, b12: 0.0, iodine: 0.0, calcium: 20.0, omega3: 20.0,
+  },
+  {
+    brand: "Sanitarium", product: "Weet-Bix",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "575g", serving: "2 biscuits (30g)",
+    retailer: "Coles", category: "Breakfast", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 12.0, calcium: 45.0, omega3: 40.0,
+  },
+  {
+    brand: "Kellogg's", product: "Corn Flakes",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "380g", serving: "30g",
+    retailer: "Coles", category: "Breakfast", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 5.0, calcium: 5.0, omega3: 5.0,
+  },
+  {
+    brand: "SunRice", product: "Brown Rice",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "150g cooked",
+    retailer: "Coles", category: "Grains", vegan: true,
+    iron: 0.7, b12: 0.0, iodine: 0.0, calcium: 15.0, omega3: 20.0,
+  },
+  {
+    brand: "SunRice", product: "Long Grain White Rice",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "150g cooked",
+    retailer: "Coles", category: "Grains", vegan: true,
+    iron: 0.4, b12: 0.0, iodine: 0.0, calcium: 15.0, omega3: 10.0,
+  },
+  {
+    brand: "San Remo", product: "Spaghetti",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "150g cooked",
+    retailer: "Coles", category: "Grains", vegan: true,
+    iron: 1.5, b12: 0.0, iodine: 2.0, calcium: 20.0, omega3: 20.0,
+  },
+  {
+    brand: "Edgell", product: "Chick Peas",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "400g", serving: "120g drained",
+    retailer: "Coles", category: "Legumes", vegan: true,
+    iron: 2.8, b12: 0.0, iodine: 3.0, calcium: 55.0, omega3: 60.0,
+  },
+  {
+    brand: "Edgell", product: "Lentils",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "400g", serving: "120g drained",
+    retailer: "Coles", category: "Legumes", vegan: true,
+    iron: 3.6, b12: 0.0, iodine: 3.0, calcium: 25.0, omega3: 70.0,
+  },
+  {
+    brand: "Edgell", product: "Cannellini Beans",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "400g", serving: "120g drained",
+    retailer: "Coles", category: "Legumes", vegan: true,
+    iron: 2.5, b12: 0.0, iodine: 2.0, calcium: 60.0, omega3: 50.0,
+  },
+  {
+    brand: "Coles", product: "Organic Firm Tofu",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "100g",
+    retailer: "Coles", category: "Protein", vegan: true,
+    iron: 2.5, b12: 0.0, iodine: 5.0, calcium: 350.0, omega3: 500.0,
+  },
+  {
+    brand: "Coles", product: "Silken Tofu",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "100g",
+    retailer: "Coles", category: "Protein", vegan: true,
+    iron: 1.8, b12: 0.0, iodine: 4.0, calcium: 150.0, omega3: 400.0,
+  },
+  {
+    brand: "Coles", product: "Plant-Based Mince",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "100g",
+    retailer: "Coles", category: "Protein", vegan: true,
+    iron: 2.5, b12: 1.0, iodine: 5.0, calcium: 80.0, omega3: 100.0,
+  },
+  {
+    brand: "Coles", product: "Plant-Based Sausages",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "100g",
+    retailer: "Coles", category: "Protein", vegan: true,
+    iron: 2.0, b12: 1.0, iodine: 5.0, calcium: 70.0, omega3: 100.0,
+  },
+  {
+    brand: "Coles", product: "Peanut Butter",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "375g", serving: "20g",
+    retailer: "Coles", category: "Spreads", vegan: true,
+    iron: 0.4, b12: 0.0, iodine: 0.0, calcium: 10.0, omega3: 10.0,
+  },
+  {
+    brand: "Coles", product: "Chia Seeds",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "20g",
+    retailer: "Coles", category: "Nuts & Seeds", vegan: true,
+    iron: 1.5, b12: 0.0, iodine: 1.0, calcium: 126.0, omega3: 3500.0,
+  },
+  {
+    brand: "Coles", product: "Almonds",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "30g",
+    retailer: "Coles", category: "Nuts & Seeds", vegan: true,
+    iron: 1.1, b12: 0.0, iodine: 1.0, calcium: 75.0, omega3: 10.0,
+  },
+  {
+    brand: "Coles", product: "Pepitas",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "30g",
+    retailer: "Coles", category: "Nuts & Seeds", vegan: true,
+    iron: 2.6, b12: 0.0, iodine: 1.0, calcium: 14.0, omega3: 30.0,
+  },
+  {
+    brand: "Coles", product: "Tahini",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "375g", serving: "20g",
+    retailer: "Coles", category: "Spreads", vegan: true,
+    iron: 1.0, b12: 0.0, iodine: 1.0, calcium: 130.0, omega3: 50.0,
+  },
+  {
+    brand: "Vitasoy", product: "Calci-Plus Soy Milk",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1L", serving: "250mL",
+    retailer: "Coles", category: "Plant Milk", vegan: true,
+    iron: 1.0, b12: 1.0, iodine: 20.0, calcium: 300.0, omega3: 100.0,
+  },
+  {
+    brand: "So Good", product: "Almond Milk",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1L", serving: "250mL",
+    retailer: "Coles", category: "Plant Milk", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 15.0, calcium: 300.0, omega3: 50.0,
+  },
+  {
+    brand: "Vitasoy", product: "Oat Milk",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1L", serving: "250mL",
+    retailer: "Coles", category: "Plant Milk", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 15.0, calcium: 300.0, omega3: 100.0,
+  },
+  {
+    brand: "Coles", product: "Iodised Table Salt",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "1g",
+    retailer: "Coles", category: "Pantry", vegan: true,
+    iron: 0.0, b12: 0.0, iodine: 45.0, calcium: 0.0, omega3: 0.0,
+  },
+  {
+    brand: "Birds Eye", product: "Garden Mix Frozen Vegetables",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "75g",
+    retailer: "Coles", category: "Vegetables", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 10.0, calcium: 35.0, omega3: 40.0,
+  },
+  {
+    brand: "Coles", product: "Frozen Peas",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "100g",
+    retailer: "Coles", category: "Vegetables", vegan: true,
+    iron: 1.5, b12: 0.0, iodine: 3.0, calcium: 25.0, omega3: 40.0,
+  },
+  {
+    brand: "Coles", product: "Fresh Broccoli",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "100g",
+    retailer: "Coles", category: "Vegetables", vegan: true,
+    iron: 0.7, b12: 0.0, iodine: 10.0, calcium: 47.0, omega3: 50.0,
+  },
+  {
+    brand: "Coles", product: "Bananas",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "1 medium (120g)",
+    retailer: "Coles", category: "Fruit", vegan: true,
+    iron: 0.3, b12: 0.0, iodine: 2.0, calcium: 6.0, omega3: 30.0,
+  },
+  {
+    brand: "Coles", product: "Royal Gala Apples",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "1 medium (150g)",
+    retailer: "Coles", category: "Fruit", vegan: true,
+    iron: 0.2, b12: 0.0, iodine: 0.0, calcium: 10.0, omega3: 10.0,
+  },
+  {
+    brand: "Lindt", product: "70% Dark Chocolate",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "100g", serving: "30g",
+    retailer: "Coles", category: "Discretionary", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 2.0, calcium: 20.0, omega3: 20.0,
+  },
+  {
+    brand: "Smith's", product: "Original Potato Chips",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "170g", serving: "30g",
+    retailer: "Coles", category: "Discretionary", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 1.0, calcium: 10.0, omega3: 30.0,
+  },
+  {
+    brand: "ALDI", product: "Baker's Life Wholemeal Bread",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "700g", serving: "2 slices (70g)",
+    retailer: "ALDI", category: "Bread", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 10.0, calcium: 60.0, omega3: 40.0,
+  },
+  {
+    brand: "ALDI", product: "Just Organic Rolled Oats",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "40g",
+    retailer: "ALDI", category: "Breakfast", vegan: true,
+    iron: 1.7, b12: 0.0, iodine: 0.0, calcium: 20.0, omega3: 20.0,
+  },
+  {
+    brand: "ALDI", product: "Corn Flakes",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "30g",
+    retailer: "ALDI", category: "Breakfast", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 5.0, calcium: 5.0, omega3: 5.0,
+  },
+  {
+    brand: "ALDI", product: "Long Grain Brown Rice",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1kg", serving: "150g cooked",
+    retailer: "ALDI", category: "Grains", vegan: true,
+    iron: 0.7, b12: 0.0, iodine: 0.0, calcium: 15.0, omega3: 20.0,
+  },
+  {
+    brand: "ALDI", product: "Spaghetti",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "150g cooked",
+    retailer: "ALDI", category: "Grains", vegan: true,
+    iron: 1.5, b12: 0.0, iodine: 2.0, calcium: 20.0, omega3: 20.0,
+  },
+  {
+    brand: "ALDI", product: "Black Beans",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "400g", serving: "120g drained",
+    retailer: "ALDI", category: "Legumes", vegan: true,
+    iron: 2.5, b12: 0.0, iodine: 2.0, calcium: 40.0, omega3: 50.0,
+  },
+  {
+    brand: "ALDI", product: "Chickpeas",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "400g", serving: "120g drained",
+    retailer: "ALDI", category: "Legumes", vegan: true,
+    iron: 2.8, b12: 0.0, iodine: 3.0, calcium: 55.0, omega3: 60.0,
+  },
+  {
+    brand: "ALDI", product: "Lentils",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "400g", serving: "120g drained",
+    retailer: "ALDI", category: "Legumes", vegan: true,
+    iron: 3.6, b12: 0.0, iodine: 3.0, calcium: 25.0, omega3: 70.0,
+  },
+  {
+    brand: "ALDI", product: "Calcium Fortified Soy Milk",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1L", serving: "250mL",
+    retailer: "ALDI", category: "Plant Milk", vegan: true,
+    iron: 1.0, b12: 1.0, iodine: 20.0, calcium: 300.0, omega3: 100.0,
+  },
+  {
+    brand: "ALDI", product: "Almond Milk",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1L", serving: "250mL",
+    retailer: "ALDI", category: "Plant Milk", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 15.0, calcium: 300.0, omega3: 50.0,
+  },
+  {
+    brand: "ALDI", product: "Oat Milk",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "1L", serving: "250mL",
+    retailer: "ALDI", category: "Plant Milk", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 15.0, calcium: 300.0, omega3: 100.0,
+  },
+  {
+    brand: "ALDI", product: "Firm Tofu",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "100g",
+    retailer: "ALDI", category: "Protein", vegan: true,
+    iron: 2.5, b12: 0.0, iodine: 5.0, calcium: 350.0, omega3: 500.0,
+  },
+  {
+    brand: "ALDI", product: "Vegan Burger",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "200g", serving: "100g",
+    retailer: "ALDI", category: "Protein", vegan: true,
+    iron: 2.0, b12: 1.0, iodine: 5.0, calcium: 80.0, omega3: 100.0,
+  },
+  {
+    brand: "ALDI", product: "Frozen Edamame",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "100g",
+    retailer: "ALDI", category: "Protein", vegan: true,
+    iron: 2.3, b12: 0.0, iodine: 2.0, calcium: 60.0, omega3: 300.0,
+  },
+  {
+    brand: "ALDI", product: "Peanut Butter",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "375g", serving: "20g",
+    retailer: "ALDI", category: "Spreads", vegan: true,
+    iron: 0.4, b12: 0.0, iodine: 0.0, calcium: 10.0, omega3: 10.0,
+  },
+  {
+    brand: "ALDI", product: "Tahini",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "375g", serving: "20g",
+    retailer: "ALDI", category: "Spreads", vegan: true,
+    iron: 1.0, b12: 0.0, iodine: 1.0, calcium: 130.0, omega3: 50.0,
+  },
+  {
+    brand: "ALDI", product: "Chia Seeds",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "300g", serving: "20g",
+    retailer: "ALDI", category: "Nuts & Seeds", vegan: true,
+    iron: 1.5, b12: 0.0, iodine: 1.0, calcium: 126.0, omega3: 3500.0,
+  },
+  {
+    brand: "ALDI", product: "Cashews",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "30g",
+    retailer: "ALDI", category: "Nuts & Seeds", vegan: true,
+    iron: 1.9, b12: 0.0, iodine: 1.0, calcium: 11.0, omega3: 15.0,
+  },
+  {
+    brand: "ALDI", product: "Mixed Nuts",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "500g", serving: "30g",
+    retailer: "ALDI", category: "Nuts & Seeds", vegan: true,
+    iron: 1.3, b12: 0.0, iodine: 1.0, calcium: 30.0, omega3: 800.0,
+  },
+  {
+    brand: "ALDI", product: "Dark Chocolate",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "100g", serving: "30g",
+    retailer: "ALDI", category: "Discretionary", vegan: true,
+    iron: 2.0, b12: 0.0, iodine: 2.0, calcium: 20.0, omega3: 20.0,
+  },
+  {
+    brand: "ALDI", product: "Potato Chips",
+    img: "", // <-- paste a product photo URL here (optional)
+    pkg: "170g", serving: "30g",
+    retailer: "ALDI", category: "Discretionary", vegan: true,
+    iron: 0.5, b12: 0.0, iodine: 1.0, calcium: 10.0, omega3: 30.0,
+  },
+];
+
+const NUTRIENTS = [
+  { key:"iron",    label:"IRON (mg)",       name:"Iron",        icon:"🩸", color:"var(--iron)",    unit:"mg" },
+  { key:"iodine",  label:"IODINE (µg)",     name:"Iodine",      icon:"💧", color:"var(--iodine)",  unit:"µg" },
+  { key:"b12",     label:"B12 (µg)",        name:"Vitamin B12", icon:"🌱", color:"var(--b12)",     unit:"µg" },
+  { key:"calcium", label:"CALCIUM (mg)",    name:"Calcium",     icon:"🦴", color:"var(--calcium)", unit:"mg" },
+  { key:"omega3",  label:"OMEGA3 ALA (mg)", name:"Omega-3 ALA", icon:"🫒", color:"var(--omega3)",  unit:"mg" },
+];
+
+/* ---------------------------------------------------------------------
+ * RECOMMENDED INTAKE TARGETS
+ * ---------------------------------------------------------------------
+ * Sourced from the Australian & New Zealand Nutrient Reference Values
+ * (NHMRC, 2006) — the Recommended Dietary Intake (RDI) for iron, iodine,
+ * B12 and calcium, and the Adequate Intake (AI) for omega-3 ALA, for
+ * healthy, non-pregnant adults. These are population-level averages, not
+ * individual medical advice.
+ *
+ * Note: of the four profile fields collected on first launch, *sex* and
+ * *age* are what actually change these five targets (that's how the
+ * official tables are structured — they're not banded by body weight,
+ * so this profile only asks for sex and age.
+ * ------------------------------------------------------------------- */
+const TARGET_TABLE = {
+  male: {
+    "18-50": { iron: 8,  iodine: 150, b12: 2.4, calcium: 1000, omega3: 1300 },
+    "51-70": { iron: 8,  iodine: 150, b12: 2.4, calcium: 1000, omega3: 1300 },
+    "71+":   { iron: 8,  iodine: 150, b12: 2.4, calcium: 1300, omega3: 1300 },
+  },
+  female: {
+    "18-50": { iron: 18, iodine: 150, b12: 2.4, calcium: 1000, omega3: 800 },
+    "51-70": { iron: 8,  iodine: 150, b12: 2.4, calcium: 1300, omega3: 800 },
+    "71+":   { iron: 8,  iodine: 150, b12: 2.4, calcium: 1300, omega3: 800 },
+  },
+};
+const DEFAULT_TARGETS = TARGET_TABLE.female["18-50"];
+
+function ageBand(age){
+  if(age <= 50) return "18-50";
+  if(age <= 70) return "51-70";
+  return "71+";
+}
+function getTargets(prof){
+  if(!prof || !prof.age) return DEFAULT_TARGETS;
+  const sex = prof.sex === "male" ? "male" : "female";
+  return TARGET_TABLE[sex][ageBand(prof.age)];
+}
+
+const PRODUCTS = PRODUCTS_RAW.map((p, i) => ({ ...p, id:i }));
+const RETAILERS = ["All", ...Array.from(new Set(PRODUCTS.map(p=>p.retailer))).sort()];
+const CATEGORIES = ["All", ...Array.from(new Set(PRODUCTS.map(p=>p.category))).sort()];
+const SORT_OPTIONS = [
+  ["Recommended", null],
+  ["Iron ↑", "iron"],
+  ["B12 ↑", "b12"],
+  ["Iodine ↑", "iodine"],
+  ["Calcium ↑", "calcium"],
+  ["Omega-3 ↑", "omega3"],
+  ["Name A–Z", "product"],
+];
+
+const PRODUCTS_PER_PAGE = 8;
+
+/* ================= STATE ================= */
+let state = {
+  basket:{}, nutrientFocus:null, page:1, screen:"catalogue",
+  search:"", retailer:"All", category:"All", sort:"Recommended", veganOnly:false,
+  showProfileModal:false,
+};
+
+let profile = null; // { sex, age, isDefault }
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem("plantBasketState");
+    if(raw){
+      const saved = JSON.parse(raw);
+      if(saved && typeof saved === "object" && saved.basket){ state.basket = saved.basket; }
+    }
+  }catch(e){ /* storage unavailable — start fresh */ }
+
+  try{
+    const rawProfile = localStorage.getItem("plantBasketProfile");
+    if(rawProfile){
+      profile = JSON.parse(rawProfile);
+    }
+  }catch(e){ /* storage unavailable */ }
+
+  // First launch (or storage was unavailable): ask for the profile before
+  // showing the catalogue, so the nutrient targets are right from the start.
+  if(!profile){ state.showProfileModal = true; }
+}
+function saveState(){
+  try{ localStorage.setItem("plantBasketState", JSON.stringify({ basket: state.basket })); }
+  catch(e){ /* ignore */ }
+}
+function saveProfile(p){
+  profile = p;
+  try{ localStorage.setItem("plantBasketProfile", JSON.stringify(p)); }
+  catch(e){ /* ignore — profile still works for this session */ }
+}
+loadState();
+
+/* ================= FUZZY MATCH ================= */
+function levenshtein(a, b){
+  const m = a.length, n = b.length;
+  if(!m) return n; if(!n) return m;
+  let prev = Array.from({length:n+1}, (_,j)=>j);
+  for(let i=1;i<=m;i++){
+    let cur = [i];
+    for(let j=1;j<=n;j++){
+      const cost = a[i-1] === b[j-1] ? 0 : 1;
+      cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+cost);
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+function ratio(a, b){
+  const maxLen = Math.max(a.length, b.length);
+  if(maxLen === 0) return 100;
+  return (1 - levenshtein(a,b)/maxLen) * 100;
+}
+function partialRatio(needle, hay){
+  if(needle.length === 0 || hay.length === 0) return 0;
+  if(needle.length >= hay.length) return ratio(needle, hay);
+  let best = 0;
+  for(let i=0;i<=hay.length-needle.length;i++){
+    best = Math.max(best, ratio(needle, hay.substr(i, needle.length)));
+  }
+  return best;
+}
+function fuzzyMatch(productName, searchClean){
+  const productClean = productName.toLowerCase();
+  if(productClean.includes(searchClean)) return true;
+  const words = productClean.replace(/-/g," ").split(/\s+/).filter(Boolean);
+  for(const w of words){ if(ratio(searchClean, w) >= 55) return true; }
+  return partialRatio(searchClean, productClean) >= 55;
+}
+
+/* ================= HELPERS ================= */
+function fmtNum(v){ return Math.round(v*10)/10; }
+function clampPct(p){ return Math.min(Math.max(p,0),100); }
+
+function totalServings(){
+  return Object.values(state.basket).reduce((a,b)=>a+b,0);
+}
+function calculateTotals(){
+  const totals = {}; NUTRIENTS.forEach(n=>totals[n.key]=0);
+  for(const [idStr, servings] of Object.entries(state.basket)){
+    const product = PRODUCTS[Number(idStr)];
+    if(!product) continue;
+    NUTRIENTS.forEach(n=>{ totals[n.key] += product[n.key] * servings; });
+  }
+  return totals;
+}
+
+function addToBasket(id){
+  state.basket[id] = (state.basket[id] || 0) + 1;
+  saveState();
+  render();
+  toast(PRODUCTS[id].product + " added ✓");
+}
+function setServings(id, n){
+  if(n <= 0){ delete state.basket[id]; } else { state.basket[id] = n; }
+  saveState(); render();
+}
+function removeFromBasket(id){ delete state.basket[id]; saveState(); render(); }
+function clearBasket(){ state.basket = {}; state.nutrientFocus = null; saveState(); render(); }
+
+let toastTimer = null;
+function toast(msg){
+  let el = document.getElementById("toast");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "toast";
+    el.style.cssText = "position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:rgba(32,37,31,.95);color:#fff;padding:9px 16px;border-radius:99px;font-size:.8rem;font-weight:600;z-index:2000;box-shadow:0 6px 18px rgba(0,0,0,.25);opacity:0;transition:opacity .2s;pointer-events:none;";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  requestAnimationFrame(()=>{ el.style.opacity = "1"; });
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.style.opacity = "0"; }, 1600);
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function nutrientBarHTML(nutrient, value, target, compact){
+  const pct = target ? (value / target) * 100 : 0;
+  const disp = clampPct(pct);
+  if(compact){
+    return `
+    <div class="nutrient-row">
+      <div class="nutrient-line"><span>${nutrient.icon} ${nutrient.name}</span><span class="nutrient-value">${pct.toFixed(0)}%</span></div>
+      <div class="nutrient-track"><div class="nutrient-fill" style="width:${disp}%;background:${nutrient.color};"></div></div>
+    </div>`;
+  }
+  return `
+  <div class="big-nutrient">
+    <div class="big-nutrient-head"><span>${nutrient.icon} ${nutrient.name}</span><span>${pct.toFixed(0)}%</span></div>
+    <div class="big-track"><div class="big-fill" style="width:${disp}%;background:${nutrient.color};"></div></div>
+    <div class="big-detail">${fmtNum(value)} ${nutrient.unit} / ${target} ${nutrient.unit} reference target</div>
+  </div>`;
+}
+
+/* ================= FILTERING ================= */
+function getFilteredProducts(){
+  let list = PRODUCTS.slice();
+
+  if(state.search){
+    const s = state.search.toLowerCase().trim();
+    list = list.filter(p => fuzzyMatch(p.product, s));
+  }
+  if(state.retailer !== "All") list = list.filter(p => p.retailer === state.retailer);
+  if(state.category !== "All") list = list.filter(p => p.category === state.category);
+  if(state.veganOnly) list = list.filter(p => p.vegan);
+
+  if(state.nutrientFocus){
+    const key = state.nutrientFocus;
+    const positive = list.filter(p => p[key] > 0);
+    if(positive.length){
+      const sorted = positive.map(p=>p[key]).sort((a,b)=>a-b);
+      const mid = Math.floor(sorted.length/2);
+      const median = sorted.length % 2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+      list = positive.filter(p => p[key] >= median).sort((a,b)=> b[key]-a[key]);
+    }
+  } else {
+    const sortKey = SORT_OPTIONS.find(([label])=>label===state.sort)[1];
+    if(sortKey === "product"){
+      list = list.slice().sort((a,b)=> a.product.localeCompare(b.product));
+    } else if(sortKey){
+      list = list.slice().sort((a,b)=> (b[sortKey]||0) - (a[sortKey]||0));
+    }
+  }
+  return list;
+}
+
+/* ================= RENDER: HEADER + NAV ================= */
+function renderHeader(){
+  return `
+  <div class="header-row">
+    <div>
+      <div class="eyebrow">GROCERY NUTRITION</div>
+      <h1 class="title">🌱 Plant Basket</h1>
+      <div class="subtitle">Build a basket and explore its contribution to key nutrients.</div>
+    </div>
+    <div class="header-actions">
+      <div class="basket-metric">
+        <div class="n">${totalServings()}</div>
+        <div class="l">serves</div>
+      </div>
+      <button class="profile-btn" data-action="open-profile" aria-label="Edit profile">👤</button>
+    </div>
+  </div>
+  <div class="segmented">
+    <button data-action="screen" data-screen="catalogue" class="${state.screen==='catalogue'?'active':''}">🛍️ Catalogue</button>
+    <button data-action="screen" data-screen="basket" class="${state.screen==='basket'?'active':''}">🛒 Basket</button>
+  </div>
+  ${renderProfileSummary()}`;
+}
+
+function renderProfileSummary(){
+  if(!profile) return "";
+  const sexLabel = profile.sex === "male" ? "Male" : "Female";
+  const basis = profile.isDefault
+    ? `Using general adult estimates (not personalised)`
+    : `Targets based on <strong>${sexLabel}, age ${profile.age}</strong>`;
+  return `
+  <div class="profile-summary">
+    <div class="txt">${basis}</div>
+    <button data-action="open-profile">Edit</button>
+  </div>`;
+}
+
+/* ================= RENDER: CATALOGUE ================= */
+function renderProductCard(p){
+  const targets = getTargets(profile);
+  let bars = "";
+  NUTRIENTS.forEach(n => { bars += nutrientBarHTML(n, p[n.key], targets[n.key], true); });
+  const thumbInner = p.img
+    ? `<img src="${esc(p.img)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🛒',style:'opacity:.6'}))">`
+    : `<span style="opacity:.6;">🛒</span>`;
+  return `
+  <div class="card">
+    <div class="product-top">
+      <div class="thumb">${thumbInner}</div>
+      <div class="p-copy">
+        <div class="brand">${esc(p.brand)}</div>
+        <div class="p-name">${esc(p.product)}</div>
+        <div class="p-meta">${esc(p.retailer)} · ${esc(p.pkg)}<br>Serving: ${esc(p.serving)}</div>
+      </div>
+    </div>
+    ${bars}
+    <button class="add-btn" data-action="add" data-id="${p.id}">＋ Add to basket</button>
+  </div>`;
+}
+
+function renderCatalogue(){
+  const filtered = getFilteredProducts();
+
+  let banner = "";
+  if(state.nutrientFocus){
+    const n = NUTRIENTS.find(x=>x.key===state.nutrientFocus);
+    banner = `
+    <div class="info-banner">
+      Showing stronger sources of <strong>${n.name}</strong>. Tap the button below to return to the full catalogue.
+      <button data-action="clear-focus">Show all foods</button>
+    </div>`;
+  }
+
+  const retailerOpts = RETAILERS.map(r=>`<option value="${esc(r)}" ${state.retailer===r?"selected":""}>${esc(r)}</option>`).join("");
+  const categoryOpts = CATEGORIES.map(c=>`<option value="${esc(c)}" ${state.category===c?"selected":""}>${esc(c)}</option>`).join("");
+  const sortOpts = SORT_OPTIONS.map(([label])=>`<option value="${esc(label)}" ${state.sort===label?"selected":""}>${esc(label)}</option>`).join("");
+
+  let body;
+  if(filtered.length === 0){
+    body = `
+    <div class="empty-card">
+      <div class="big">🔎</div>
+      <div class="strong">No products found</div>
+      <div class="small">Try another search, retailer or category.</div>
+    </div>`;
+  } else {
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PER_PAGE));
+    if(state.page > totalPages) state.page = totalPages;
+    const start = (state.page - 1) * PRODUCTS_PER_PAGE;
+    const pageItems = filtered.slice(start, start + PRODUCTS_PER_PAGE);
+
+    let pagination = "";
+    if(totalPages > 1){
+      pagination = `
+      <hr class="divider">
+      <div class="pagination">
+        <button data-action="prev-page" ${state.page<=1?"disabled":""}>←</button>
+        <div class="page-indicator">${state.page} / ${totalPages}</div>
+        <button data-action="next-page" ${state.page>=totalPages?"disabled":""}>→</button>
+      </div>`;
+    }
+
+    body = `
+    <div class="grid">${pageItems.map(renderProductCard).join("")}</div>
+    ${pagination}`;
+  }
+
+  return `
+  <div class="search-wrap">
+    <input type="text" id="search-input" placeholder="🔍  Search tofu, oats, Weet-Bix..." value="${esc(state.search)}">
+  </div>
+  <div class="filter-row">
+    <select id="retailer-select">${retailerOpts}</select>
+    <select id="category-select">${categoryOpts}</select>
+    <select id="sort-select">${sortOpts}</select>
+  </div>
+  <div class="vegan-toggle-row">
+    <span class="label">🌱 Vegan products only</span>
+    <label class="switch">
+      <input type="checkbox" id="vegan-toggle" ${state.veganOnly?"checked":""}>
+      <span class="track"><span class="knob"></span></span>
+    </label>
+  </div>
+  ${banner}
+  <div class="cat-heading">
+    <div>
+      <div class="h">Grocery catalogue</div>
+      <div class="c">${filtered.length} products</div>
+    </div>
+  </div>
+  ${body}`;
+}
+
+/* ================= RENDER: BASKET ================= */
+function renderBasket(){
+  const entries = Object.entries(state.basket);
+  if(entries.length === 0){
+    return `
+    <div class="section-title">🛒 Your basket</div>
+    <div class="empty-card">
+      <div class="big">🛒</div>
+      <div class="strong">Your basket is empty</div>
+      <div class="small">Add foods from the catalogue to see your nutrient contribution.</div>
+    </div>`;
+  }
+
+  const items = entries.map(([idStr, servings]) => {
+    const p = PRODUCTS[Number(idStr)];
+    if(!p) return "";
+    return `
+    <div class="basket-item">
+      <div class="basket-item-info">
+        <div class="basket-item-name">${esc(p.brand)} · ${esc(p.product)}</div>
+        <div class="basket-item-meta">${esc(p.retailer)} · ${esc(p.serving)}</div>
+      </div>
+      <div class="stepper">
+        <button data-action="dec" data-id="${p.id}">−</button>
+        <span class="n">${servings}</span>
+        <button data-action="inc" data-id="${p.id}">+</button>
+      </div>
+      <button class="remove-btn" data-action="remove" data-id="${p.id}">✕</button>
+    </div>`;
+  }).join("");
+
+  const totals = calculateTotals();
+  const targets = getTargets(profile);
+  let dashboard = `<div class="dashboard-card"><div class="dashboard-title">Your basket provides</div>`;
+  NUTRIENTS.forEach(n => { dashboard += nutrientBarHTML(n, totals[n.key], targets[n.key], false); });
+  dashboard += `</div>`;
+
+  const coverage = {};
+  NUTRIENTS.forEach(n => { coverage[n.key] = totals[n.key] / targets[n.key]; });
+  const lowestKey = Object.keys(coverage).reduce((a,b)=> coverage[a] <= coverage[b] ? a : b);
+  const lowest = NUTRIENTS.find(n=>n.key===lowestKey);
+  const lowestPct = coverage[lowestKey] * 100;
+
+  return `
+  <div class="section-title">🛒 Your basket</div>
+  ${items}
+  ${dashboard}
+  <div class="insight-card">
+    💡 <strong>${lowest.name}</strong> is currently your lowest-covered nutrient at approximately <strong>${lowestPct.toFixed(0)}%</strong> of the reference target.
+  </div>
+  <button class="action-btn" data-action="find-focus" data-key="${lowest.key}">Find foods high in ${lowest.name}</button>
+  <button class="action-btn destructive" data-action="clear-basket">Clear basket</button>`;
+}
+
+/* ================= RENDER: PROFILE MODAL ================= */
+function renderProfileModal(){
+  if(!state.showProfileModal) return "";
+
+  const p = profile || {};
+  const sex = p.sex || "female";
+  const age = p.age || "";
+  const isFirstLaunch = !profile;
+
+  return `
+  <div class="modal-overlay" data-action="modal-overlay">
+    <div class="modal-card" data-stop-propagation="1">
+      <div class="modal-title">${isFirstLaunch ? "Welcome 🌱" : "Edit your profile"}</div>
+      <div class="modal-sub">${isFirstLaunch
+        ? "A quick profile lets us show your personal recommended intake for each nutrient, based on the Australian Nutrient Reference Values."
+        : "Update your details to recalculate your recommended intake."}</div>
+
+      <form id="profile-form">
+        <div class="field-label">Sex</div>
+        <div class="sex-picker">
+          <input type="radio" name="sex" id="sex-female" value="female" ${sex==="female"?"checked":""}>
+          <label for="sex-female">Female</label>
+          <input type="radio" name="sex" id="sex-male" value="male" ${sex==="male"?"checked":""}>
+          <label for="sex-male">Male</label>
+        </div>
+
+        <div class="field-label">Age (years)</div>
+        <input type="number" id="profile-age" inputmode="numeric" min="18" max="120" placeholder="e.g. 24" value="${age}">
+        <div class="field-hint">Targets are for adults 18+. Iron and omega-3 needs shift a little around age 51.</div>
+
+        <div class="modal-error" id="profile-error">Please enter a valid age between 18 and 120.</div>
+
+        <div class="modal-actions">
+          <button type="submit" class="modal-submit">Save and continue</button>
+          ${isFirstLaunch ? `<button type="button" class="modal-skip" data-action="skip-profile">Skip — use general adult estimates</button>` : ""}
+          ${!isFirstLaunch ? `<button type="button" class="modal-skip" data-action="close-profile">Cancel</button>` : ""}
+        </div>
+      </form>
+    </div>
+  </div>`;
+}
+
+
+/* ================= RENDER: FLOATING BAR ================= */
+function renderFloating(){
+  const totals = calculateTotals();
+  const targets = getTargets(profile);
+  const bars = NUTRIENTS.map(n=>{
+    const pct = clampPct((totals[n.key] / targets[n.key]) * 100);
+    return `<div class="floating-track"><div class="floating-fill" style="width:${pct}%;background:${n.color};"></div></div>`;
+  }).join("");
+
+  return `
+  <div class="floating-wrap">
+    <div class="floating-progress">${bars}</div>
+    <button class="floating-btn" data-action="open-basket">
+      <span>🛒 ${totalServings()} serves</span>
+      <span>Open basket →</span>
+    </button>
+  </div>`;
+}
+
+/* ================= MASTER RENDER ================= */
+function render(){
+  const app = document.getElementById("app");
+  const screenHTML = state.screen === "basket" ? renderBasket() : renderCatalogue();
+  app.innerHTML = `
+    ${renderHeader()}
+    ${screenHTML}
+    <div class="footer-note">Educational tool only. This calculator estimates nutrient contributions from selected foods and does not diagnose nutrient deficiencies or replace individual dietary advice from a qualified health professional.</div>
+  `;
+  document.querySelectorAll(".floating-wrap").forEach(el=>el.remove());
+  document.body.insertAdjacentHTML("beforeend", renderFloating());
+
+  document.querySelectorAll(".modal-overlay").forEach(el=>el.remove());
+  const modalHTML = renderProfileModal();
+  if(modalHTML){ document.body.insertAdjacentHTML("beforeend", modalHTML); }
+
+  attachEvents();
+}
+
+/* ================= EVENTS ================= */
+function attachEvents(){
+  document.body.addEventListener("click", onClick);
+
+  const searchInput = document.getElementById("search-input");
+  if(searchInput){
+    searchInput.addEventListener("input", (e)=>{
+      state.search = e.target.value;
+      state.page = 1;
+      renderPreservingFocus("search-input");
+    });
+  }
+  const retailerSelect = document.getElementById("retailer-select");
+  if(retailerSelect) retailerSelect.addEventListener("change", e=>{ state.retailer = e.target.value; state.page=1; render(); });
+
+  const categorySelect = document.getElementById("category-select");
+  if(categorySelect) categorySelect.addEventListener("change", e=>{ state.category = e.target.value; state.page=1; render(); });
+
+  const sortSelect = document.getElementById("sort-select");
+  if(sortSelect) sortSelect.addEventListener("change", e=>{ state.sort = e.target.value; render(); });
+
+  const veganToggle = document.getElementById("vegan-toggle");
+  if(veganToggle) veganToggle.addEventListener("change", e=>{ state.veganOnly = e.target.checked; state.page=1; render(); });
+
+  const profileForm = document.getElementById("profile-form");
+  if(profileForm){
+    profileForm.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const sexEl = profileForm.querySelector('input[name="sex"]:checked');
+      const sex = sexEl ? sexEl.value : "female";
+      const ageVal = Number(document.getElementById("profile-age").value);
+
+      const errorEl = document.getElementById("profile-error");
+      if(!ageVal || ageVal < 18 || ageVal > 120){
+        errorEl.classList.add("show");
+        return;
+      }
+      errorEl.classList.remove("show");
+
+      saveProfile({
+        sex,
+        age: ageVal,
+        isDefault: false,
+      });
+      state.showProfileModal = false;
+      render();
+    });
+  }
+}
+
+// Re-render while keeping focus + caret in the search box (typing shouldn't lose focus)
+function renderPreservingFocus(inputId){
+  const el = document.getElementById(inputId);
+  const pos = el ? el.selectionStart : null;
+  render();
+  const newEl = document.getElementById(inputId);
+  if(newEl){ newEl.focus(); if(pos !== null) newEl.setSelectionRange(pos, pos); }
+}
+
+document.body.addEventListener = document.body.addEventListener; // no-op keep
+
+function onClick(e){
+  // Clicking the dimmed backdrop (not the card itself) closes the modal —
+  // checked by exact target match so clicks inside the card never bubble
+  // into this via a closest() match on an ancestor.
+  if(e.target.classList && e.target.classList.contains("modal-overlay")){
+    if(profile){ state.showProfileModal = false; render(); }
+    return;
+  }
+
+  const btn = e.target.closest("[data-action]");
+  if(!btn) return;
+  const action = btn.dataset.action;
+
+  if(action === "screen"){ state.screen = btn.dataset.screen; render(); return; }
+  if(action === "open-basket"){ state.screen = "basket"; render(); window.scrollTo(0,0); return; }
+  if(action === "add"){ addToBasket(Number(btn.dataset.id)); return; }
+  if(action === "clear-focus"){ state.nutrientFocus = null; state.page = 1; render(); return; }
+  if(action === "prev-page"){ state.page -= 1; render(); window.scrollTo(0,0); return; }
+  if(action === "next-page"){ state.page += 1; render(); window.scrollTo(0,0); return; }
+  if(action === "inc"){ const id=Number(btn.dataset.id); setServings(id, (state.basket[id]||0)+1); return; }
+  if(action === "dec"){ const id=Number(btn.dataset.id); setServings(id, (state.basket[id]||0)-1); return; }
+  if(action === "remove"){ removeFromBasket(Number(btn.dataset.id)); return; }
+  if(action === "find-focus"){ state.nutrientFocus = btn.dataset.key; state.page = 1; state.screen = "catalogue"; render(); return; }
+  if(action === "clear-basket"){ clearBasket(); return; }
+  if(action === "open-profile"){ state.showProfileModal = true; render(); return; }
+  if(action === "close-profile"){ state.showProfileModal = false; render(); return; }
+  if(action === "skip-profile"){
+    saveProfile({ sex:"female", age:30, isDefault:true });
+    state.showProfileModal = false;
+    render();
+    return;
+  }
+}
+
+render();
+})();
+</script>
+</body>
+</html>
